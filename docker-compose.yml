@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+    frontend:
+        image: back-front:dev
+        build:
+            context: ./front-end
+            dockerfile: Dockerfile
+        restart: always
+        volumes:
+            - ./front-end:/home/node
+        environment:
+            HOST: '0.0.0.0'
+
+    backend:
+        image: back-end:dev
+        build:
+            context: ./back-end
+            dockerfile: Dockerfile
+        restart: always
+        volumes:
+            - ./back-end:/var/www/html
+
+    nginx:
+        image: nginx:alpine
+        volumes:
+           - ./nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - 8000:80
+
+    db:
+        platform: linux/x86_64
+        image: mysql:5.7
+        restart: always
+        volumes:
+            - ./storage/db-data:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+
+    phpmyadmin:
+        platform: linux/amd64
+        image: phpmyadmin:5
+        restart: always
+        depends_on:
+            - db
+        environment:
+            PMA_HOST: db
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - 8001:80
